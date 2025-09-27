@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar";
 import LandingPage from "./components/LandingPage";
 import SurveyPage from "./components/SurveyPage";
 import SurveyResults from "./components/SurveyResults";
+const backendUrl = "https://classic-plus-site.onrender.com";
 
 function App() {
   return (
@@ -12,7 +13,7 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/survey" element={<SurveyPage />} />
-        <Route path="/results" element={<SurveyResults />} />
+        <Route path="/results" element={<SurveyResults backendUrl={backendUrl} />} />
       </Routes>
     </Router>
   );

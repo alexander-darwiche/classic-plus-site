@@ -15,6 +15,9 @@ function Navbar() {
       <Link to="/survey" style={{ color: "#fff", margin: "0 20px", textDecoration: "none", fontWeight: "bold" }}>
         Survey
       </Link>
+      <Link to="/results" style={{ color: "#fff", margin: "0 20px", textDecoration: "none", fontWeight: "bold" }}>
+        Survey
+      </Link>
     </nav>
   );
 }

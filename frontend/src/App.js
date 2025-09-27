@@ -4,7 +4,7 @@ function App() {
   const [items, setItems] = useState([]);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/items/")
+    fetch("https://classic-plus-site.onrender.com/items/")
       .then(res => res.json())
       .then(data => setItems(data));
   }, []);

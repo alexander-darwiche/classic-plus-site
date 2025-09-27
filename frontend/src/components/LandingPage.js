@@ -5,7 +5,7 @@ function LandingPage() {
     <div
       style={{
         minHeight: "100vh",
-        backgroundImage: "url('https://www.buffed.de/screenshots/original/2019/11/WoW_Classic_Plus_Logo.jpg')",
+        backgroundImage: "url('https://wow.zamimg.com/uploads/screenshots/normal/1059910.jpg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         color: "white",
@@ -36,9 +36,9 @@ function LandingPage() {
             position: "absolute",
             top: 0,
             left: 0,
-            width: "100%",
-            height: "100%",
-            border: "none",
+            width: "50%",
+            height: "50%",
+            // border: "none",
           }}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen

@@ -1,32 +1,50 @@
-import React, { useState } from "react";
 
-function SurveyForm() {
+import React, { useState } from "react";
+const backendUrl = "https://classic-plus-site.onrender.com";
+
+function SurveyForm({ backendUrl }) {
   const [formData, setFormData] = useState({ name: "", email: "", feedback: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleChange = (e) => {
     setFormData({...formData, [e.target.name]: e.target.value});
-  }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const response = await fetch("https://classic-plus-site.onrender.com//survey/", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify(formData),
-    });
+    setError(null);  // clear previous errors
 
-    if(response.ok) setSubmitted(true);
-  }
+    try {
+      const response = await fetch(`${backendUrl}/survey/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
-  if(submitted) return <h2>Thank you for your feedback!</h2>;
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error("Backend error:", errText);
+        setError("Failed to submit survey.");
+        return;
+      }
+
+      setSubmitted(true);
+    } catch (err) {
+      console.error("Network error:", err);
+      setError("Network error. Check console for details.");
+    }
+  };
+
+  if (submitted) return <h2>Thank you for your feedback!</h2>;
 
   return (
-    <form onSubmit={handleSubmit} style={{ maxWidth: "400px", margin: "auto" }}>
+    <form onSubmit={handleSubmit} style={{ maxWidth: "400px", margin: "20px auto" }}>
       <input name="name" placeholder="Name" value={formData.name} onChange={handleChange} required />
       <input name="email" type="email" placeholder="Email" value={formData.email} onChange={handleChange} required />
       <textarea name="feedback" placeholder="Your feedback" value={formData.feedback} onChange={handleChange} required />
       <button type="submit">Submit</button>
+      {error && <p style={{color:"red"}}>{error}</p>}
     </form>
   );
 }

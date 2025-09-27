@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from app.routers import items
-
+from app.routers import survey
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -19,6 +19,8 @@ app.add_middleware(
 
 app = FastAPI()
 app.include_router(items.router)
+app.include_router(survey.router)
+
 
 @app.get("/")
 def root():

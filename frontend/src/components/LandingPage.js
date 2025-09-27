@@ -31,7 +31,7 @@ function LandingPage() {
       }}>
         <iframe
           title="WoW Classic Plus Video"
-          src="https://www.youtube.com/watch?v=MVUD2BqPpEc" // replace with your video URL
+          src="https://www.youtube.com/embed/MVUD2BqPpEc" // replace with your video URL
           style={{
             position: "absolute",
             top: 0,

@@ -1,12 +1,13 @@
 from fastapi import FastAPI
-from app.routers import items
-from app.routers import survey
+from app.routers import items, survey
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
+app = FastAPI()  # only once!
 
+# Correct CORS setup
 origins = [
-    "https://classic-plus-site-frontend.onrender.com/",  # React site URL
+    "https://classic-plus-site-frontend.onrender.com",  # remove the trailing slash
+    "http://localhost:3000",  # optional for local dev
 ]
 
 app.add_middleware(
@@ -17,10 +18,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app = FastAPI()
+# Include routers
 app.include_router(items.router)
 app.include_router(survey.router)
-
 
 @app.get("/")
 def root():

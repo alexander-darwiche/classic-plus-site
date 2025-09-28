@@ -15,7 +15,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/survey" element={<SurveyPage />} />
         <Route path="/results" element={<SurveyResults backendUrl={backendUrl} />} />
-        <Route path="/results" element={<CustomMap backendUrl={backendUrl} />} />
+        <Route path="/map" element={<CustomMap backendUrl={backendUrl} />} />
 
       </Routes>
     </Router>

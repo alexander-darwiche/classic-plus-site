@@ -51,7 +51,7 @@ function CustomMap({ backendUrl }) {
       x: newPinCoords.x,
       y: newPinCoords.y,
       description: newPinDesc,
-      pin_category: newPinCategory,
+      category: newPinCategory,
     };
 
     const res = await fetch(`${backendUrl}/pins/`, {
@@ -113,7 +113,7 @@ function CustomMap({ backendUrl }) {
             return (
               <div
                 key={pin.id}
-                title={`${pin.pin_category}: ${pin.description}`}
+                title={`${pin.category}: ${pin.description}`}
                 style={{
                   position: "absolute",
                   left: `${pin.x * 100}%`,
@@ -122,7 +122,7 @@ function CustomMap({ backendUrl }) {
                   height: "15px",
                   borderRadius: "50%",
                   border: "1px solid black",
-                  backgroundColor: getColor(pin.pin_category),
+                  backgroundColor: getColor(pin.category),
                   transform: "translate(-50%, -50%)",
                   zIndex: 10,
                   cursor: "pointer",

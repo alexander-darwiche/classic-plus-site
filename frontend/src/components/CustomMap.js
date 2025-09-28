@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
 function CustomMap({ backendUrl }) {
   const [pins, setPins] = useState([]);
@@ -8,6 +8,21 @@ function CustomMap({ backendUrl }) {
 
   const imgRef = useRef(null);
 
+
+  // Fetch pins from backend when component mounts
+  useEffect(() => {
+    const fetchPins = async () => {
+      try {
+        const res = await fetch(`${backendUrl}/pins`);
+        const data = await res.json();
+        setPins(data);
+      } catch (err) {
+        console.error("Failed to fetch pins:", err);
+      }
+    };
+    fetchPins();
+  }, [backendUrl]);
+  
   const getColor = (category) => {
     switch ((category || "").toLowerCase()) {
       case "lore": return "blue";
@@ -18,6 +33,8 @@ function CustomMap({ backendUrl }) {
     }
   };
 
+  
+
 //   const handleMapDoubleClick = (e) => {
 //         // x and y in pixels relative to the viewport
 //         const x = e.clientX;
@@ -27,20 +44,35 @@ function CustomMap({ backendUrl }) {
 //     };
       
 
-  const handleSavePin = () => {
-    if (!newPinCoords || !newPinDesc) return;
+    const handleSavePin = async () => {
+        if (!newPinCoords || !newPinDesc) return;
+    
+        const newPin = {
+            x: newPinCoords.x,
+            y: newPinCoords.y,
+            description: newPinDesc,
+            category: newPinCategory,
+        };
+    
+        // Save to backend
+        const res = await fetch(`${backendUrl}/pins/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newPin),
+        });
+        const savedPin = await res.json();
+    
+        setPins([...pins, savedPin]);
 
-    const newPin = {
-      x: newPinCoords.x,
-      y: newPinCoords.y,
-      description: newPinDesc,
-      category: newPinCategory,
-      id: Date.now(),
+        const updatedPins = [...pins, newPin];
+        setPins(updatedPins);
+        localStorage.setItem("pins", JSON.stringify(updatedPins));
+    
+        setNewPinCoords(null);
+        setNewPinDesc("");
+        setNewPinCategory("Lore");
     };
-
-    setPins([...pins, newPin]);
-    setNewPinCoords(null);
-  };
+  
 
   const handleCancelPin = () => {
     setNewPinCoords(null);

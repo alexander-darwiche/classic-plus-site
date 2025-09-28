@@ -9,6 +9,7 @@ function CustomMap({ backendUrl }) {
   const [newPinCategory, setNewPinCategory] = useState("Lore");
 
   const imgRef = useRef(null);
+  const transformWrapperRef = useRef(null);
 
   useEffect(() => {
     fetch(`${backendUrl}/pins/`)
@@ -32,11 +33,14 @@ function CustomMap({ backendUrl }) {
   };
 
   const handleMapClick = (e) => {
-    if (!addPinMode) return;
+    if (!addPinMode || !transformWrapperRef.current) return;
 
+    const { state } = transformWrapperRef.current; // get current scale and position
     const rect = imgRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
+
+    // Adjust for pan/zoom
+    const x = (e.clientX - rect.left - state.positionX) / (rect.width * state.scale);
+    const y = (e.clientY - rect.top - state.positionY) / (rect.height * state.scale);
 
     setNewPinCoords({ x, y });
   };
@@ -68,13 +72,13 @@ function CustomMap({ backendUrl }) {
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
       <TransformWrapper
+        ref={transformWrapperRef}
         minScale={0.5}
         maxScale={3}
         initialScale={1}
-        wheel={{ step: 0.1 }} // mouse wheel zoom sensitivity
-        pinch={{ step: 5 }}    // touch pinch sensitivity
-        doubleClick={{ disabled: true }} // disable zoom on double click
-        panning={{ velocityDisabled: true }} // smoother panning
+        wheel={{ step: 0.1 }}
+        pinch={{ step: 5 }}
+        doubleClick={{ disabled: true }}
       >
         <TransformComponent>
           <div style={{ position: "relative" }}>
@@ -173,4 +177,3 @@ function CustomMap({ backendUrl }) {
 }
 
 export default CustomMap;
-

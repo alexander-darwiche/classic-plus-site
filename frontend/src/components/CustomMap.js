@@ -12,22 +12,28 @@ function CustomMap({ backendUrl }) {
 
   useEffect(() => {
     fetch(`${backendUrl}/pins/`)
-      .then(res => res.json())
-      .then(data => setPins(data));
+      .then((res) => res.json())
+      .then((data) => setPins(data));
   }, [backendUrl]);
 
-  const zoomIn = () => setZoom((prev) => Math.min(prev + 0.2, 3));
-  const zoomOut = () => setZoom((prev) => Math.max(prev - 0.2, 0.5));
+  const zoomStep = 0.5; // faster zoom
+  const zoomIn = () => setZoom((prev) => Math.min(prev + zoomStep, 5));
+  const zoomOut = () => setZoom((prev) => Math.max(prev - zoomStep, 0.5));
 
   const getColor = (pin_category) => {
     switch ((pin_category || "").toLowerCase()) {
-      case "lore": return "blue";
-      case "quest": return "green";
-      case "raid": return "red";
-      case "dungeon": return "purple";
-      default: return "gray";
+      case "lore":
+        return "blue";
+      case "quest":
+        return "green";
+      case "raid":
+        return "red";
+      case "dungeon":
+        return "purple";
+      default:
+        return "gray";
     }
-  };  
+  };
 
   const handleMapClick = (e) => {
     if (!addPinMode) return;
@@ -43,10 +49,10 @@ function CustomMap({ backendUrl }) {
     if (!newPinCoords || !newPinDesc) return;
 
     const newPin = {
-        x: newPinCoords.x,
-        y: newPinCoords.y,
-        description: newPinDesc,
-        pin_category: newPinCategory,
+      x: newPinCoords.x,
+      y: newPinCoords.y,
+      description: newPinDesc,
+      pin_category: newPinCategory,
     };
 
     const res = await fetch(`${backendUrl}/pins/`, {
@@ -57,7 +63,6 @@ function CustomMap({ backendUrl }) {
     const savedPin = await res.json();
     setPins([...pins, savedPin]);
 
-    // Reset
     setAddPinMode(false);
     setNewPinCoords(null);
     setNewPinDesc("");
@@ -65,37 +70,67 @@ function CustomMap({ backendUrl }) {
   };
 
   return (
-    <div style={{ textAlign: "center" }}>
-      <button onClick={() => setAddPinMode(true)} style={{ margin: "10px" }}>Add Pin</button>
-      <div style={{ margin: "10px" }}>
-        <button onClick={zoomIn}>Zoom In</button>
-        <button onClick={zoomOut} style={{ marginLeft: "10px" }}>Zoom Out</button>
-      </div>
-
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        marginTop: "20px",
+      }}
+    >
       <div
         ref={mapContainerRef}
         onClick={handleMapClick}
         style={{
           position: "relative",
-          display: "inline-block",
-          transform: `scale(${zoom})`,
-          transformOrigin: "top left",
+          maxWidth: "95vw",
+          maxHeight: "90vh",
+          overflow: "hidden",
+          border: "2px solid black",
         }}
       >
-        <img src="/map.jpg" alt="Map" style={{ display: "block" }} />
+        {/* Map Image */}
+        <img
+          src="/map.jpg"
+          alt="Map"
+          style={{
+            display: "block",
+            width: "100%",
+            height: "auto",
+            transform: `scale(${zoom})`,
+            transformOrigin: "top left",
+          }}
+        />
 
+        {/* Buttons inside map */}
+        <div
+          style={{
+            position: "absolute",
+            top: "10px",
+            left: "10px",
+            zIndex: 20,
+            display: "flex",
+            flexDirection: "column",
+            gap: "5px",
+          }}
+        >
+          <button onClick={() => setAddPinMode(true)}>Add Pin</button>
+          <button onClick={zoomIn}>Zoom In</button>
+          <button onClick={zoomOut}>Zoom Out</button>
+        </div>
+
+        {/* Existing pins */}
         {pins.map((pin) => (
           <div
             key={pin.id}
-            title={`${pin.category}: ${pin.description}`}
+            title={`${pin.pin_category}: ${pin.description}`}
             style={{
               position: "absolute",
               left: `${pin.x * 100}%`,
               top: `${pin.y * 100}%`,
-              transform: `translate(-50%, -50%)`,
+              transform: `translate(-50%, -50%) scale(${zoom})`,
               width: "15px",
               height: "15px",
-              backgroundColor: getColor(pin.category),
+              backgroundColor: getColor(pin.pin_category),
               borderRadius: "50%",
               border: "1px solid black",
               cursor: "pointer",
@@ -103,6 +138,7 @@ function CustomMap({ backendUrl }) {
           />
         ))}
 
+        {/* New Pin Popup */}
         {addPinMode && newPinCoords && (
           <div
             style={{
@@ -114,7 +150,7 @@ function CustomMap({ backendUrl }) {
               padding: "10px",
               borderRadius: "5px",
               border: "1px solid black",
-              zIndex: 10,
+              zIndex: 30,
             }}
           >
             <div>
@@ -138,7 +174,9 @@ function CustomMap({ backendUrl }) {
                 <option>Dungeon</option>
               </select>
             </div>
-            <button onClick={handleSavePin} style={{ marginTop: "5px" }}>Save Pin</button>
+            <button onClick={handleSavePin} style={{ marginTop: "5px" }}>
+              Save Pin
+            </button>
           </div>
         )}
       </div>

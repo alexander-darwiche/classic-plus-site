@@ -10,21 +10,19 @@ function CustomMap({ backendUrl }) {
   const dragStart = useRef({ x: 0, y: 0 });
   const offsetStart = useRef({ x: 0, y: 0 });
 
-  // Fetch pins from backend
+  // Fetch pins
   useEffect(() => {
     fetch(`${backendUrl}/pins/`)
-      .then(res => res.json())
-      .then(data => setPins(data));
+      .then((res) => res.json())
+      .then((data) => setPins(data));
   }, [backendUrl]);
 
-  // Zoom handler
   const handleWheel = (e) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    setZoom(prev => Math.min(Math.max(prev + delta, 0.2), 3));
+    setZoom((prev) => Math.min(Math.max(prev + delta, 0.2), 3));
   };
 
-  // Drag / Pan handlers
   const handleMouseDown = (e) => {
     isDragging.current = true;
     dragStart.current = { x: e.clientX, y: e.clientY };
@@ -42,18 +40,22 @@ function CustomMap({ backendUrl }) {
     isDragging.current = false;
   };
 
-  // Color by category
+  // Color mapping
   const getColor = (category) => {
-    switch (category) {
-      case "Lore": return "blue";
-      case "Quest": return "green";
-      case "Raid": return "red";
-      case "Dungeon": return "purple";
-      default: return "gray";
+    switch ((category || "").toLowerCase()) {
+      case "lore":
+        return "blue";
+      case "quest":
+        return "green";
+      case "raid":
+        return "red";
+      case "dungeon":
+        return "purple";
+      default:
+        return "gray";
     }
   };
 
-  // Click handler for adding a pin
   const handleMapClick = async (e) => {
     if (!addPinMode) return;
 
@@ -64,7 +66,6 @@ function CustomMap({ backendUrl }) {
     const description = prompt("Enter a description for this pin:");
     if (!description) return;
 
-    // Category dropdown prompt
     const categories = ["Lore", "Quest", "Raid", "Dungeon"];
     let category = "";
     while (!categories.includes(category)) {
@@ -77,7 +78,6 @@ function CustomMap({ backendUrl }) {
 
     const newPin = { x, y, description, category };
 
-    // Save to backend
     const res = await fetch(`${backendUrl}/pins/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -85,8 +85,7 @@ function CustomMap({ backendUrl }) {
     });
     const savedPin = await res.json();
     setPins([...pins, savedPin]);
-
-    setAddPinMode(false); // exit add pin mode
+    setAddPinMode(false);
   };
 
   return (
@@ -97,15 +96,14 @@ function CustomMap({ backendUrl }) {
       >
         Add Pin
       </button>
-      {addPinMode && <p style={{color: "red"}}>Click on the map to place your pin</p>}
+      {addPinMode && (
+        <p style={{ color: "red" }}>Click on the map to place your pin</p>
+      )}
 
       <div
         style={{
-          width: "80%",
+          width: "fit-content",
           margin: "auto",
-          height: "80vh",
-          overflow: "hidden",
-          border: "2px solid black",
           position: "relative",
           cursor: isDragging.current ? "grabbing" : "grab",
         }}
@@ -115,7 +113,7 @@ function CustomMap({ backendUrl }) {
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         ref={mapRef}
-        onClick={(e) => handleMapClick(e)}
+        onClick={handleMapClick}
       >
         <img
           src="/map.jpg"
@@ -123,8 +121,6 @@ function CustomMap({ backendUrl }) {
           style={{
             transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
             transformOrigin: "top left",
-            width: "100%",
-            height: "100%",
             display: "block",
             userSelect: "none",
             pointerEvents: "none",
@@ -140,7 +136,7 @@ function CustomMap({ backendUrl }) {
               position: "absolute",
               top: `${pin.y * 100}%`,
               left: `${pin.x * 100}%`,
-              transform: `translate(-50%, -50%) scale(${zoom})`,
+              transform: `translate(-50%, -50%) scale(${1 / zoom})`,
               width: "15px",
               height: "15px",
               backgroundColor: getColor(pin.category),

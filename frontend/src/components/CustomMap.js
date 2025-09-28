@@ -8,7 +8,7 @@ function CustomMap({ backendUrl }) {
   const [newPinDesc, setNewPinDesc] = useState("");
   const [newPinCategory, setNewPinCategory] = useState("Lore");
 
-  const mapContainerRef = useRef(null);
+  const mapRef = useRef(null);
 
   useEffect(() => {
     fetch(`${backendUrl}/pins/`)
@@ -16,12 +16,12 @@ function CustomMap({ backendUrl }) {
       .then((data) => setPins(data));
   }, [backendUrl]);
 
-  const zoomStep = 0.5; // faster zoom
+  const zoomStep = 0.5;
   const zoomIn = () => setZoom((prev) => Math.min(prev + zoomStep, 5));
   const zoomOut = () => setZoom((prev) => Math.max(prev - zoomStep, 0.5));
 
-  const getColor = (pin_category) => {
-    switch ((pin_category || "").toLowerCase()) {
+  const getColor = (category) => {
+    switch ((category || "").toLowerCase()) {
       case "lore":
         return "blue";
       case "quest":
@@ -37,11 +37,9 @@ function CustomMap({ backendUrl }) {
 
   const handleMapClick = (e) => {
     if (!addPinMode) return;
-
-    const rect = mapContainerRef.current.getBoundingClientRect();
+    const rect = mapRef.current.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width;
     const y = (e.clientY - rect.top) / rect.height;
-
     setNewPinCoords({ x, y });
   };
 
@@ -70,34 +68,27 @@ function CustomMap({ backendUrl }) {
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        marginTop: "20px",
-      }}
-    >
+    <div style={{ textAlign: "center" }}>
       <div
-        ref={mapContainerRef}
+        ref={mapRef}
         onClick={handleMapClick}
         style={{
           position: "relative",
+          display: "inline-block",
           maxWidth: "95vw",
           maxHeight: "90vh",
           overflow: "hidden",
           border: "2px solid black",
         }}
       >
-        {/* Map Image */}
+        {/* Map image */}
         <img
           src="/map.jpg"
           alt="Map"
           style={{
             display: "block",
-            width: "100%",
+            width: `${zoom * 100}%`,
             height: "auto",
-            transform: `scale(${zoom})`,
-            transformOrigin: "top left",
           }}
         />
 
@@ -127,18 +118,19 @@ function CustomMap({ backendUrl }) {
               position: "absolute",
               left: `${pin.x * 100}%`,
               top: `${pin.y * 100}%`,
-              transform: `translate(-50%, -50%) scale(${zoom})`,
+              transform: "translate(-50%, -50%)",
               width: "15px",
               height: "15px",
               backgroundColor: getColor(pin.pin_category),
               borderRadius: "50%",
               border: "1px solid black",
               cursor: "pointer",
+              zIndex: 10,
             }}
           />
         ))}
 
-        {/* New Pin Popup */}
+        {/* New Pin popup */}
         {addPinMode && newPinCoords && (
           <div
             style={{
@@ -146,7 +138,7 @@ function CustomMap({ backendUrl }) {
               left: `${newPinCoords.x * 100}%`,
               top: `${newPinCoords.y * 100}%`,
               transform: "translate(-50%, -50%)",
-              background: "rgba(255,255,255,0.9)",
+              background: "rgba(255,255,255,0.95)",
               padding: "10px",
               borderRadius: "5px",
               border: "1px solid black",

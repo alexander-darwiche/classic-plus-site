@@ -16,7 +16,7 @@ function CustomMap({ backendUrl }) {
       .then((data) => setPins(data));
   }, [backendUrl]);
 
-  const zoomStep = 0.5;
+  const zoomStep = 0.25;
   const zoomIn = () => setZoom((prev) => Math.min(prev + zoomStep, 5));
   const zoomOut = () => setZoom((prev) => Math.max(prev - zoomStep, 0.5));
 

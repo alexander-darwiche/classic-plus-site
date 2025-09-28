@@ -84,7 +84,7 @@ function CustomMap({ backendUrl }) {
             onClick={handleMapClick}
             style={{
                 display: "block",
-                width: "100%",           // fills container width
+                width: `${zoom * 100}%`,           // fills container width
                 maxWidth: "100vw",       // does not exceed viewport width
                 maxHeight: "100vh",      // does not exceed viewport height
                 height: "auto",          // keeps aspect ratio

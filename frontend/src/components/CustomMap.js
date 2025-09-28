@@ -8,39 +8,35 @@ function CustomMap({ backendUrl }) {
   const [newPinDesc, setNewPinDesc] = useState("");
   const [newPinCategory, setNewPinCategory] = useState("Lore");
 
+  const mapContainerRef = useRef(null);
   const imgRef = useRef(null);
 
   useEffect(() => {
     fetch(`${backendUrl}/pins/`)
-      .then((res) => res.json())
-      .then((data) => setPins(data));
+      .then(res => res.json())
+      .then(data => setPins(data));
   }, [backendUrl]);
 
-  const zoomStep = 0.25;
-  const zoomIn = () => setZoom((prev) => Math.min(prev + zoomStep, 5));
-  const zoomOut = () => setZoom((prev) => Math.max(prev - zoomStep, 0.5));
+  const zoomIn = () => setZoom((prev) => Math.min(prev + 0.3, 3));
+  const zoomOut = () => setZoom((prev) => Math.max(prev - 0.3, 0.5));
 
   const getColor = (category) => {
     switch ((category || "").toLowerCase()) {
-      case "lore":
-        return "blue";
-      case "quest":
-        return "green";
-      case "raid":
-        return "red";
-      case "dungeon":
-        return "purple";
-      default:
-        return "gray";
+      case "lore": return "blue";
+      case "quest": return "green";
+      case "raid": return "red";
+      case "dungeon": return "purple";
+      default: return "gray";
     }
   };
 
   const handleMapClick = (e) => {
-    if (!addPinMode || !imgRef.current) return;
+    if (!addPinMode) return;
 
     const rect = imgRef.current.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width;
     const y = (e.clientY - rect.top) / rect.height;
+
     setNewPinCoords({ x, y });
   };
 
@@ -62,6 +58,7 @@ function CustomMap({ backendUrl }) {
     const savedPin = await res.json();
     setPins([...pins, savedPin]);
 
+    // Reset
     setAddPinMode(false);
     setNewPinCoords(null);
     setNewPinDesc("");
@@ -71,26 +68,26 @@ function CustomMap({ backendUrl }) {
   return (
     <div style={{ textAlign: "center" }}>
       <div
+        ref={mapContainerRef}
         style={{
           position: "relative",
           display: "inline-block",
           border: "2px solid black",
+          transform: `scale(${zoom})`,
+          transformOrigin: "top left",
         }}
       >
         <img
-            ref={imgRef}
-            src="/map.jpg"
-            alt="Map"
-            onClick={handleMapClick}
-            style={{
-                display: "block",
-                width: `${zoom * 100}%`,           // fills container width
-                maxWidth: "100vw",       // does not exceed viewport width
-                maxHeight: "100vh",      // does not exceed viewport height
-                height: "auto",          // keeps aspect ratio
-                objectFit: "contain",    // ensures no stretching
-                cursor: addPinMode ? "crosshair" : "default"
-            }}
+          ref={imgRef}
+          src="/map.jpg"
+          alt="Map"
+          onClick={handleMapClick}
+          style={{
+            display: "block",
+            width: "auto",
+            height: "90%",
+            cursor: addPinMode ? "crosshair" : "default",
+          }}
         />
 
         {/* Buttons inside map */}
@@ -110,30 +107,26 @@ function CustomMap({ backendUrl }) {
           <button onClick={zoomOut}>Zoom Out</button>
         </div>
 
-        {/* Existing pins */}
-        {imgRef.current &&
-          pins.map((pin) => {
-            const imgRect = imgRef.current.getBoundingClientRect();
-            return (
-              <div
-                key={pin.id}
-                title={`${pin.category}: ${pin.description}`}
-                style={{
-                  position: "absolute",
-                  left: `${pin.x * 100 * zoom}%`,
-                  top: `${pin.y * 100 * zoom}%`,
-                  width: "15px",
-                  height: "15px",
-                  borderRadius: "50%",
-                  border: "1px solid black",
-                  backgroundColor: getColor(pin.category),
-                  transform: "translate(-50%, -50%)",
-                  zIndex: 10,
-                  cursor: "pointer",
-                }}
-              />
-            );
-          })}
+        {/* Pins */}
+        {pins.map((pin) => (
+          <div
+            key={pin.id}
+            title={`${pin.category}: ${pin.description}`}
+            style={{
+              position: "absolute",
+              left: `${pin.x * 100}%`,
+              top: `${pin.y * 100}%`,
+              width: "15px",
+              height: "15px",
+              borderRadius: "50%",
+              border: "1px solid black",
+              backgroundColor: getColor(pin.category),
+              transform: "translate(-50%, -50%)",
+              cursor: "pointer",
+              zIndex: 10,
+            }}
+          />
+        ))}
 
         {/* New Pin popup */}
         {addPinMode && newPinCoords && (

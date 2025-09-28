@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import items, survey
+from app.routers import items, survey, pins
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -24,6 +24,8 @@ app.add_middleware(
 # Include routers
 app.include_router(items.router)
 app.include_router(survey.router)
+app.include_router(pins.router)
+
 
 @app.get("/")
 def root():

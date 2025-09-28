@@ -5,6 +5,7 @@ import LandingPage from "./components/LandingPage";
 import SurveyPage from "./components/SurveyPage";
 import SurveyResults from "./components/SurveyResults";
 import CustomMap from "./components/CustomMap";
+import PinsList from "./components/PinList";
 const backendUrl = "https://classic-plus-site.onrender.com";
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
         <Route path="/survey" element={<SurveyPage />} />
         <Route path="/results" element={<SurveyResults backendUrl={backendUrl} />} />
         <Route path="/map" element={<CustomMap backendUrl={backendUrl} />} />
+        <Route path="/pins" element={<PinsList backendUrl={backendUrl} />} />
 
       </Routes>
     </Router>

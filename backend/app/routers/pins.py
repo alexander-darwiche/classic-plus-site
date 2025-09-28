@@ -52,7 +52,12 @@ def get_db():
 # --- Routes ---
 @router.post("/", response_model=PinSchema)
 def add_pin(pin: PinSchema, db: Session = Depends(get_db)):
-    db_pin = Pin(x=pin.x, y=pin.y, description=pin.description)
+    db_pin = Pin(
+        x=pin.x,
+        y=pin.y,
+        description=pin.description,
+        category=pin.category  # <-- assign it!
+    )
     db.add(db_pin)
     db.commit()
     db.refresh(db_pin)

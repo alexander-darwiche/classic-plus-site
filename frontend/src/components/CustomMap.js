@@ -78,15 +78,19 @@ function CustomMap({ backendUrl }) {
         }}
       >
         <img
-          ref={imgRef}
-          src="/map.jpg"
-          alt="Map"
-          onClick={handleMapClick}
-          style={{
-            display: "block",
-            width: `${zoom * 100}%`,
-            height: "auto",
-          }}
+            ref={imgRef}
+            src="/map.jpg"
+            alt="Map"
+            onClick={handleMapClick}
+            style={{
+                display: "block",
+                width: "100%",           // fills container width
+                maxWidth: "100vw",       // does not exceed viewport width
+                maxHeight: "100vh",      // does not exceed viewport height
+                height: "auto",          // keeps aspect ratio
+                objectFit: "contain",    // ensures no stretching
+                cursor: addPinMode ? "crosshair" : "default"
+            }}
         />
 
         {/* Buttons inside map */}
@@ -116,8 +120,8 @@ function CustomMap({ backendUrl }) {
                 title={`${pin.category}: ${pin.description}`}
                 style={{
                   position: "absolute",
-                  left: `${pin.x * 100}%`,
-                  top: `${pin.y * 100}%`,
+                  left: `${pin.x * 100 * zoom}%`,
+                  top: `${pin.y * 100 * zoom}%`,
                   width: "15px",
                   height: "15px",
                   borderRadius: "50%",

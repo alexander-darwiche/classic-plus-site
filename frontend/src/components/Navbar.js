@@ -21,6 +21,9 @@ function Navbar() {
       <Link to="/map" style={{ color: "#fff", margin: "0 20px", textDecoration: "none", fontWeight: "bold" }}>
         Map
       </Link>
+      <Link to="/pins" style={{ color: "#fff", margin: "0 20px", textDecoration: "none", fontWeight: "bold" }}>
+        Pins
+      </Link>
     </nav>
   );
 }

@@ -4,20 +4,29 @@ from sqlalchemy.orm import Session
 from app.database import SessionLocal, engine, Base
 from pydantic import BaseModel
 from typing import List
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Integer, String, Float, Enum
+import enum
 
 router = APIRouter(
     prefix="/pins",
     tags=["pins"]
 )
 
-# --- Database Model ---
+
+# optional: define categories as an Enum
+class PinCategory(str, enum.Enum):
+    Lore = "Lore"
+    Quest = "Quest"
+    Raid = "Raid"
+    Dungeon = "Dungeon"
+
 class Pin(Base):
     __tablename__ = "pins"
     id = Column(Integer, primary_key=True, index=True)
-    x = Column(Float, nullable=False)   # relative x coordinate (0-1)
-    y = Column(Float, nullable=False)   # relative y coordinate (0-1)
+    x = Column(Float, nullable=False)
+    y = Column(Float, nullable=False)
     description = Column(String, nullable=False)
+    category = Column(String, nullable=False)  # NEW FIELD
 
 Base.metadata.create_all(bind=engine)
 
@@ -27,6 +36,7 @@ class PinSchema(BaseModel):
     x: float
     y: float
     description: str
+    category: PinCategory  # NEW FIELD
 
     class Config:
         orm_mode = True

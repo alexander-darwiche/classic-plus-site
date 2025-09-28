@@ -84,8 +84,8 @@ function CustomMap({ backendUrl }) {
           onClick={handleMapClick}
           style={{
             display: "block",
-            width: "auto",
-            height: "90%",
+            width: "90%",
+            height: "auto",
             cursor: addPinMode ? "crosshair" : "default",
           }}
         />

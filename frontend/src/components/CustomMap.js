@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 function CustomMap({ backendUrl }) {
   const [pins, setPins] = useState([]);
@@ -8,7 +8,6 @@ function CustomMap({ backendUrl }) {
   const [newPinDesc, setNewPinDesc] = useState("");
   const [newPinCategory, setNewPinCategory] = useState("Lore");
 
-  const mapContainerRef = useRef(null);
   const imgRef = useRef(null);
 
   useEffect(() => {
@@ -17,8 +16,8 @@ function CustomMap({ backendUrl }) {
       .then(data => setPins(data));
   }, [backendUrl]);
 
-  const zoomIn = () => setZoom((prev) => Math.min(prev + 0.3, 3));
-  const zoomOut = () => setZoom((prev) => Math.max(prev - 0.3, 0.5));
+  const zoomIn = () => setZoom(prev => Math.min(prev + 0.5, 3));
+  const zoomOut = () => setZoom(prev => Math.max(prev - 0.5, 0.5));
 
   const getColor = (category) => {
     switch ((category || "").toLowerCase()) {
@@ -58,7 +57,6 @@ function CustomMap({ backendUrl }) {
     const savedPin = await res.json();
     setPins([...pins, savedPin]);
 
-    // Reset
     setAddPinMode(false);
     setNewPinCoords(null);
     setNewPinDesc("");
@@ -66,17 +64,26 @@ function CustomMap({ backendUrl }) {
   };
 
   return (
-    <div style={{ textAlign: "center" }}>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        width: "100vw",
+        height: "100vh",
+        overflow: "auto",
+      }}
+    >
       <div
-        ref={mapContainerRef}
         style={{
           position: "relative",
-          display: "inline-block",
           border: "2px solid black",
-          transform: `scale(${zoom})`,
-          transformOrigin: "top left",
+          maxWidth: "95vw",
+          maxHeight: "90vh",
+          overflow: "hidden",
         }}
       >
+        {/* Map */}
         <img
           ref={imgRef}
           src="/map.jpg"
@@ -84,13 +91,15 @@ function CustomMap({ backendUrl }) {
           onClick={handleMapClick}
           style={{
             display: "block",
-            width: "90%",
+            width: "100%",
             height: "auto",
             cursor: addPinMode ? "crosshair" : "default",
+            transform: `scale(${zoom})`,
+            transformOrigin: "top left",
           }}
         />
 
-        {/* Buttons inside map */}
+        {/* Buttons */}
         <div
           style={{
             position: "absolute",
@@ -108,7 +117,7 @@ function CustomMap({ backendUrl }) {
         </div>
 
         {/* Pins */}
-        {pins.map((pin) => (
+        {pins.map(pin => (
           <div
             key={pin.id}
             title={`${pin.category}: ${pin.description}`}
@@ -128,7 +137,7 @@ function CustomMap({ backendUrl }) {
           />
         ))}
 
-        {/* New Pin popup */}
+        {/* New Pin Popup */}
         {addPinMode && newPinCoords && (
           <div
             style={{

@@ -9,7 +9,6 @@ function CustomMap({ backendUrl }) {
   const [newPinCategory, setNewPinCategory] = useState("Lore");
 
   const imgRef = useRef(null);
-  const transformWrapperRef = useRef(null);
 
   useEffect(() => {
     fetch(`${backendUrl}/pins/`)
@@ -19,28 +18,20 @@ function CustomMap({ backendUrl }) {
 
   const getColor = (category) => {
     switch ((category || "").toLowerCase()) {
-      case "lore":
-        return "blue";
-      case "quest":
-        return "green";
-      case "raid":
-        return "red";
-      case "dungeon":
-        return "purple";
-      default:
-        return "gray";
+      case "lore": return "blue";
+      case "quest": return "green";
+      case "raid": return "red";
+      case "dungeon": return "purple";
+      default: return "gray";
     }
   };
 
   const handleMapClick = (e) => {
-    if (!addPinMode || !transformWrapperRef.current) return;
+    if (!addPinMode) return;
 
-    const { state } = transformWrapperRef.current; // get current scale and position
     const rect = imgRef.current.getBoundingClientRect();
-
-    // Adjust for pan/zoom
-    const x = (e.clientX - rect.left - state.positionX) / (rect.width * state.scale);
-    const y = (e.clientY - rect.top - state.positionY) / (rect.height * state.scale);
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
 
     setNewPinCoords({ x, y });
   };
@@ -60,6 +51,7 @@ function CustomMap({ backendUrl }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newPin),
     });
+
     const savedPin = await res.json();
     setPins([...pins, savedPin]);
 
@@ -70,98 +62,100 @@ function CustomMap({ backendUrl }) {
   };
 
   return (
-    <div style={{ width: "100vw", height: "100vh" }}>
+    <div style={{ width: "100vw", height: "100vh", overflow: "hidden" }}>
       <TransformWrapper
-        ref={transformWrapperRef}
         minScale={0.5}
         maxScale={3}
         initialScale={1}
+        doubleClick={{ disabled: true }}
         wheel={{ step: 0.1 }}
         pinch={{ step: 5 }}
-        doubleClick={{ disabled: true }}
+        panning={{ velocityDisabled: true }}
       >
-        <TransformComponent>
-          <div style={{ position: "relative" }}>
-            <img
-              ref={imgRef}
-              src="/map.jpg"
-              alt="Map"
-              onClick={handleMapClick}
-              style={{
-                display: "block",
-                width: "100%",
-                height: "auto",
-                cursor: addPinMode ? "crosshair" : "default",
-              }}
-            />
-
-            {/* Pins */}
-            {pins.map((pin) => (
-              <div
-                key={pin.id}
-                title={`${pin.category}: ${pin.description}`}
+        {({ zoomIn, zoomOut, resetTransform }) => (
+          <TransformComponent>
+            <div style={{ position: "relative" }}>
+              <img
+                ref={imgRef}
+                src="/map.jpg"
+                alt="Map"
+                onClick={handleMapClick}
                 style={{
-                  position: "absolute",
-                  left: `${pin.x * 100}%`,
-                  top: `${pin.y * 100}%`,
-                  width: "15px",
-                  height: "15px",
-                  borderRadius: "50%",
-                  border: "1px solid black",
-                  backgroundColor: getColor(pin.category),
-                  transform: "translate(-50%, -50%)",
-                  cursor: "pointer",
-                  zIndex: 10,
+                  display: "block",
+                  width: "100%",
+                  height: "auto",
+                  cursor: addPinMode ? "crosshair" : "default",
                 }}
               />
-            ))}
 
-            {/* New Pin Popup */}
-            {addPinMode && newPinCoords && (
-              <div
-                style={{
-                  position: "absolute",
-                  left: `${newPinCoords.x * 100}%`,
-                  top: `${newPinCoords.y * 100}%`,
-                  transform: "translate(-50%, -50%)",
-                  background: "rgba(255,255,255,0.95)",
-                  padding: "10px",
-                  borderRadius: "5px",
-                  border: "1px solid black",
-                  zIndex: 30,
-                }}
-              >
-                <div>
-                  <label>Description:</label>
-                  <input
-                    type="text"
-                    value={newPinDesc}
-                    onChange={(e) => setNewPinDesc(e.target.value)}
-                    style={{ width: "150px" }}
-                  />
+              {/* Existing Pins */}
+              {pins.map((pin) => (
+                <div
+                  key={pin.id}
+                  title={`${pin.category}: ${pin.description}`}
+                  style={{
+                    position: "absolute",
+                    left: `${pin.x * 100}%`,
+                    top: `${pin.y * 100}%`,
+                    width: "15px",
+                    height: "15px",
+                    borderRadius: "50%",
+                    border: "1px solid black",
+                    backgroundColor: getColor(pin.category),
+                    transform: "translate(-50%, -50%)",
+                    cursor: "pointer",
+                    zIndex: 10,
+                  }}
+                />
+              ))}
+
+              {/* New Pin Popup */}
+              {addPinMode && newPinCoords && (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: `${newPinCoords.x * 100}%`,
+                    top: `${newPinCoords.y * 100}%`,
+                    transform: "translate(-50%, -50%)",
+                    background: "rgba(255,255,255,0.95)",
+                    padding: "10px",
+                    borderRadius: "5px",
+                    border: "1px solid black",
+                    zIndex: 30,
+                  }}
+                >
+                  <div>
+                    <label>Description:</label>
+                    <input
+                      type="text"
+                      value={newPinDesc}
+                      onChange={(e) => setNewPinDesc(e.target.value)}
+                      style={{ width: "150px" }}
+                    />
+                  </div>
+                  <div style={{ marginTop: "5px" }}>
+                    <label>Category:</label>
+                    <select
+                      value={newPinCategory}
+                      onChange={(e) => setNewPinCategory(e.target.value)}
+                    >
+                      <option>Lore</option>
+                      <option>Quest</option>
+                      <option>Raid</option>
+                      <option>Dungeon</option>
+                    </select>
+                  </div>
+                  <button onClick={handleSavePin} style={{ marginTop: "5px" }}>
+                    Save Pin
+                  </button>
                 </div>
-                <div style={{ marginTop: "5px" }}>
-                  <label>Category:</label>
-                  <select
-                    value={newPinCategory}
-                    onChange={(e) => setNewPinCategory(e.target.value)}
-                  >
-                    <option>Lore</option>
-                    <option>Quest</option>
-                    <option>Raid</option>
-                    <option>Dungeon</option>
-                  </select>
-                </div>
-                <button onClick={handleSavePin} style={{ marginTop: "5px" }}>
-                  Save Pin
-                </button>
-              </div>
-            )}
-          </div>
-        </TransformComponent>
+              )}
+            </div>
+          </TransformComponent>
+        )}
       </TransformWrapper>
 
-      {/* Add Pin Button fixed on screen */}
+      {/* Add Pin Button Fixed */}
       <div
         style={{
           position: "fixed",
@@ -170,7 +164,9 @@ function CustomMap({ backendUrl }) {
           zIndex: 100,
         }}
       >
-        <button onClick={() => setAddPinMode(true)}>Add Pin</button>
+        <button onClick={() => setAddPinMode((prev) => !prev)}>
+          {addPinMode ? "Cancel" : "Add Pin"}
+        </button>
       </div>
     </div>
   );

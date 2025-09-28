@@ -4,6 +4,7 @@ function CustomMap({ backendUrl }) {
   const [pins, setPins] = useState([]);
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [addPinMode, setAddPinMode] = useState(false);
   const mapRef = useRef(null);
   const isDragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0 });
@@ -41,30 +42,7 @@ function CustomMap({ backendUrl }) {
     isDragging.current = false;
   };
 
-  // Convert mouse click to map coordinates
-  const handleMapClick = async (e) => {
-    const rect = mapRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left - offset.x) / (rect.width * zoom);
-    const y = (e.clientY - rect.top - offset.y) / (rect.height * zoom);
-
-    const description = prompt("Enter a description for this pin:");
-    if (!description) return;
-
-    const category = prompt("Enter category (Lore, Quest, Raid, Dungeon):", "Lore");
-    if (!category) return;
-
-    const newPin = { x, y, description, category };
-
-    const res = await fetch(`${backendUrl}/pins/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newPin),
-    });
-    const savedPin = await res.json();
-    setPins([...pins, savedPin]);
-  };
-
-  // Pin color by category
+  // Color by category
   const getColor = (category) => {
     switch (category) {
       case "Lore": return "blue";
@@ -75,61 +53,105 @@ function CustomMap({ backendUrl }) {
     }
   };
 
-  return (
-    <div
-      style={{
-        width: "80%",
-        margin: "auto",
-        height: "80vh",
-        overflow: "hidden",
-        border: "2px solid black",
-        position: "relative",
-        cursor: isDragging.current ? "grabbing" : "grab"
-      }}
-      onWheel={handleWheel}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
-      ref={mapRef}
-      onClick={(e) => {
-        if (!isDragging.current) handleMapClick(e);
-      }}
-    >
-      <img
-        src="/map.jpg"
-        alt="Map"
-        style={{
-          transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
-          transformOrigin: "top left",
-          width: "100%",
-          height: "100%",
-          display: "block",
-          userSelect: "none",
-          pointerEvents: "none", // allow clicks to go to container
-        }}
-        draggable={false}
-      />
+  // Click handler for adding a pin
+  const handleMapClick = async (e) => {
+    if (!addPinMode) return;
 
-      {pins.map((pin) => (
-        <div
-          key={pin.id}
-          title={`${pin.category}: ${pin.description}`}
+    const rect = mapRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left - offset.x) / (rect.width * zoom);
+    const y = (e.clientY - rect.top - offset.y) / (rect.height * zoom);
+
+    const description = prompt("Enter a description for this pin:");
+    if (!description) return;
+
+    // Category dropdown prompt
+    const categories = ["Lore", "Quest", "Raid", "Dungeon"];
+    let category = "";
+    while (!categories.includes(category)) {
+      category = prompt(
+        `Select a category for this pin: ${categories.join(", ")}`,
+        "Lore"
+      );
+      if (category === null) return; // cancel
+    }
+
+    const newPin = { x, y, description, category };
+
+    // Save to backend
+    const res = await fetch(`${backendUrl}/pins/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newPin),
+    });
+    const savedPin = await res.json();
+    setPins([...pins, savedPin]);
+
+    setAddPinMode(false); // exit add pin mode
+  };
+
+  return (
+    <div>
+      <button
+        onClick={() => setAddPinMode(true)}
+        style={{ marginBottom: "10px", padding: "8px 12px", fontSize: "16px" }}
+      >
+        Add Pin
+      </button>
+      {addPinMode && <p style={{color: "red"}}>Click on the map to place your pin</p>}
+
+      <div
+        style={{
+          width: "80%",
+          margin: "auto",
+          height: "80vh",
+          overflow: "hidden",
+          border: "2px solid black",
+          position: "relative",
+          cursor: isDragging.current ? "grabbing" : "grab",
+        }}
+        onWheel={handleWheel}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        ref={mapRef}
+        onClick={(e) => handleMapClick(e)}
+      >
+        <img
+          src="/map.jpg"
+          alt="Map"
           style={{
-            position: "absolute",
-            top: `${pin.y * 100}%`,
-            left: `${pin.x * 100}%`,
-            transform: `translate(-50%, -50%) scale(${zoom})`,
-            width: "15px",
-            height: "15px",
-            backgroundColor: getColor(pin.category),
-            borderRadius: "50%",
-            border: "1px solid black",
-            cursor: "pointer",
-            pointerEvents: "auto", // make pins clickable/hoverable
+            transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
+            transformOrigin: "top left",
+            width: "100%",
+            height: "100%",
+            display: "block",
+            userSelect: "none",
+            pointerEvents: "none",
           }}
+          draggable={false}
         />
-      ))}
+
+        {pins.map((pin) => (
+          <div
+            key={pin.id}
+            title={`${pin.category}: ${pin.description}`}
+            style={{
+              position: "absolute",
+              top: `${pin.y * 100}%`,
+              left: `${pin.x * 100}%`,
+              transform: `translate(-50%, -50%) scale(${zoom})`,
+              width: "15px",
+              height: "15px",
+              backgroundColor: getColor(pin.category),
+              borderRadius: "50%",
+              border: "1px solid black",
+              cursor: "pointer",
+              pointerEvents: "auto",
+            }}
+          />
+        ))}
+      </div>
     </div>
   );
 }

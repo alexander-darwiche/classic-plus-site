@@ -65,56 +65,56 @@ function CustomMap({ backendUrl }) {
 
   return (
     <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        width: "100vw",
-        height: "100vh",
-        overflow: "auto",
-      }}
-    >
-      <div
         style={{
-          position: "relative",
-          border: "2px solid black",
-          maxWidth: "95vw",
-          maxHeight: "90vh",
-          overflow: "hidden",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100vw",
+            height: "100vh",
         }}
-      >
-        {/* Map */}
-        <img
-          ref={imgRef}
-          src="/map.jpg"
-          alt="Map"
-          onClick={handleMapClick}
-          style={{
-            display: "block",
-            width: "100%",
-            height: "auto",
-            cursor: addPinMode ? "crosshair" : "default",
-            transform: `scale(${zoom})`,
-            transformOrigin: "top left",
-          }}
-        />
+        >
+        <div
+            style={{
+            position: "relative",
+            border: "2px solid black",
+            maxWidth: "95vw",
+            maxHeight: "90vh",
+            overflow: "hidden",
+            }}
+        >
+            <img
+            ref={imgRef}
+            src="/map.jpg"
+            alt="Map"
+            onClick={handleMapClick}
+            style={{
+                display: "block",
+                width: "auto",
+                height: "100%",   // fit the container height
+                maxWidth: "100%", // never exceed container width
+                cursor: addPinMode ? "crosshair" : "default",
+                transform: `scale(${zoom})`,
+                transformOrigin: "top left",
+            }}
+            />
 
         {/* Buttons */}
         <div
-          style={{
-            position: "absolute",
-            top: "10px",
-            left: "10px",
-            zIndex: 20,
-            display: "flex",
-            flexDirection: "column",
-            gap: "5px",
-          }}
-        >
-          <button onClick={() => setAddPinMode(true)}>Add Pin</button>
-          <button onClick={zoomIn}>Zoom In</button>
-          <button onClick={zoomOut}>Zoom Out</button>
+            style={{
+                position: "fixed",
+                bottom: "20px",
+                right: "20px",
+                zIndex: 100,
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px",
+            }}
+            >
+            <button onClick={() => setAddPinMode(true)}>Add Pin</button>
+            <button onClick={zoomIn}>Zoom In</button>
+            <button onClick={zoomOut}>Zoom Out</button>
         </div>
+
 
         {/* Pins */}
         {pins.map(pin => (

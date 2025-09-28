@@ -18,6 +18,9 @@ function Navbar() {
       <Link to="/results" style={{ color: "#fff", margin: "0 20px", textDecoration: "none", fontWeight: "bold" }}>
         Results
       </Link>
+      <Link to="/map" style={{ color: "#fff", margin: "0 20px", textDecoration: "none", fontWeight: "bold" }}>
+        Map
+      </Link>
     </nav>
   );
 }

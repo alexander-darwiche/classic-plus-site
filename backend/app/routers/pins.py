@@ -57,6 +57,7 @@ def add_pin(pin: PinSchema, db: Session = Depends(get_db)):
     db_pin = Pin(
         x=pin.x,
         y=pin.y,
+        name=pin.name,
         description=pin.description,
         category=pin.category  # <-- assign it!
     )

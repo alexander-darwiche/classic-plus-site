@@ -173,7 +173,7 @@ function CustomMap({ backendUrl }) {
   useEffect(() => {
     const fetchPins = async () => {
       try {
-        const res = await fetch(`${backendUrl}/pins`);
+        const res = await fetch(`${backendUrl}/pins/`);
         const data = await res.json();
         setPins(data);
       } catch (err) {

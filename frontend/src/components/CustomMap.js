@@ -119,7 +119,9 @@ function ZoomablePolygon({ coords, children, onClick, visible }) {
     <Polygon
       positions={coords}
       pathOptions={{ color: "transparent", fillOpacity: 0 }}
-      eventHandlers={{ click: handleClick }}
+      interactive={false} // makes it click-through
+
+      // eventHandlers={{ click: handleClick }}
     >
       <Popup>{children}</Popup>
     </Polygon>

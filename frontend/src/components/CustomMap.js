@@ -195,7 +195,7 @@ function CustomMap({ backendUrl }) {
     };
 
     try {
-      const res = await fetch(`${backendUrl}/pins/`, {
+      const res = await fetch(`${backendUrl}/pins`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newPin),

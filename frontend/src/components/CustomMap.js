@@ -1,15 +1,174 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import {
+  MapContainer,
+  ImageOverlay,
+  Marker,
+  Popup,
+  Polygon,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
+import { useLocation } from "react-router-dom";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import PinForm from "./PinForm"; // form for adding new pins
+import polygons from "./polygons"; // your polygons.js
+
+// Fix default Leaflet markers
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+});
+
+// Colored markers
+const markerIcons = {
+  blue: new L.Icon({
+    iconUrl:
+      "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+    shadowUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41],
+  }),
+  red: new L.Icon({
+    iconUrl:
+      "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+    shadowUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41],
+  }),
+  green: new L.Icon({
+    iconUrl:
+      "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
+    shadowUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41],
+  }),
+  purple: new L.Icon({
+    iconUrl:
+      "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-violet.png",
+    shadowUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41],
+  }),
+};
+
+// Double-click to add a pin
+function AddPinOnClick({ setNewPinCoords }) {
+  useMapEvents({
+    dblclick(e) {
+      setNewPinCoords(e.latlng);
+    },
+  });
+  return null;
+}
+
+// Reset map button
+function ResetButton({ bounds, onReset }) {
+  const map = useMap();
+  const handleReset = () => {
+    map.fitBounds(bounds);
+    onReset();
+  };
+  return (
+    <div
+      style={{
+        position: "absolute",
+        top: 100,
+        left: 10,
+        zIndex: 1000,
+        background: "white",
+        padding: "5px 10px",
+        borderRadius: "5px",
+        boxShadow: "0 0 10px rgba(0,0,0,0.3)",
+        cursor: "pointer",
+      }}
+      onClick={handleReset}
+    >
+      Reset
+    </div>
+  );
+}
+
+// Zoomable polygon component
+function ZoomablePolygon({ coords, children, onClick, visible }) {
+  const map = useMap();
+  if (!visible) return null;
+
+  const handleClick = () => {
+    const bounds = L.latLngBounds(coords);
+    map.fitBounds(bounds, { padding: [50, 50] });
+    onClick();
+  };
+
+  return (
+    <Polygon
+      positions={coords}
+      pathOptions={{ color: "transparent", fillOpacity: 0 }}
+      eventHandlers={{ click: handleClick }}
+    >
+      <Popup>{children}</Popup>
+    </Polygon>
+  );
+}
+
+// Pan to pin if location.state exists
+function PanToPin() {
+  const location = useLocation();
+  const map = useMap();
+
+  useEffect(() => {
+    if (location.state?.lat != null && location.state?.lng != null) {
+      map.setView([location.state.lat, location.state.lng], 3); // adjust zoom
+    }
+  }, [location.state, map]);
+
+  return null;
+}
 
 function CustomMap({ backendUrl }) {
   const [pins, setPins] = useState([]);
   const [newPinCoords, setNewPinCoords] = useState(null);
   const [newPinDesc, setNewPinDesc] = useState("");
   const [newPinCategory, setNewPinCategory] = useState("Lore");
+  const [activePolygon, setActivePolygon] = useState(null);
 
-  const imgRef = useRef(null);
+  const imageWidth = 2000;
+  const imageHeight = 1500;
+  const imageBounds = [
+    [0, 0],
+    [imageHeight, imageWidth],
+  ];
 
+  const getColor = (category) => {
+    switch ((category || "").toLowerCase()) {
+      case "lore":
+        return "blue";
+      case "quest":
+        return "green";
+      case "raid":
+        return "red";
+      case "dungeon":
+        return "purple";
+      default:
+        return "gray";
+    }
+  };
 
-  // Fetch pins from backend when component mounts
   useEffect(() => {
     const fetchPins = async () => {
       try {
@@ -22,156 +181,91 @@ function CustomMap({ backendUrl }) {
     };
     fetchPins();
   }, [backendUrl]);
-  
-  const getColor = (category) => {
-    switch ((category || "").toLowerCase()) {
-      case "lore": return "blue";
-      case "quest": return "green";
-      case "raid": return "red";
-      case "dungeon": return "purple";
-      default: return "gray";
-    }
-  };
 
-  
+  const handleSavePin = async () => {
+    if (!newPinCoords || !newPinDesc) return;
 
-//   const handleMapDoubleClick = (e) => {
-//         // x and y in pixels relative to the viewport
-//         const x = e.clientX;
-//         const y = e.clientY;
-      
-//         setNewPinCoords({ x, y });
-//     };
-      
+    const newPin = {
+      x: newPinCoords.lat,
+      y: newPinCoords.lng,
+      description: newPinDesc,
+      category: newPinCategory,
+    };
 
-    const handleSavePin = async () => {
-        if (!newPinCoords || !newPinDesc) return;
-    
-        const newPin = {
-            x: newPinCoords.x,
-            y: newPinCoords.y,
-            description: newPinDesc,
-            category: newPinCategory,
-        };
-    
-        // Save to backend
-        const res = await fetch(`${backendUrl}/pins/`, {
+    try {
+      const res = await fetch(`${backendUrl}/pins/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newPin),
-        });
-        const savedPin = await res.json();
-    
-        setPins([...pins, savedPin]);
+      });
+      const savedPin = await res.json();
+      setPins([...pins, savedPin]);
+    } catch (err) {
+      console.error("Failed to save pin:", err);
+    }
 
-        const updatedPins = [...pins, newPin];
-        setPins(updatedPins);
-        localStorage.setItem("pins", JSON.stringify(updatedPins));
-    
-        setNewPinCoords(null);
-        setNewPinDesc("");
-        setNewPinCategory("Lore");
-    };
-  
-
-  const handleCancelPin = () => {
     setNewPinCoords(null);
+    setNewPinDesc("");
+    setNewPinCategory("Lore");
   };
 
+  const handleCancelPin = () => setNewPinCoords(null);
+
+  const handleReset = () => setActivePolygon(null);
+
   return (
-    <div
-      style={{
-        width: "100vw",
-        height: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "flex-start",
-        paddingTop: "60px", // leave space for navbar
-        boxSizing: "border-box",
-        overflow: "auto",
-      }}
+    <MapContainer
+      crs={L.CRS.Simple}
+      bounds={imageBounds}
+      maxBounds={imageBounds}
+      style={{ width: "100vw", height: "100vh" }}
+      doubleClickZoom={false}
     >
-      <div
-        style={{
-          position: "relative",
-          border: "2px solid black",
-          maxWidth: "95vw",
-          maxHeight: "calc(100vh - 60px)",
-        }}
-      >
-        {/* Map Image */}
-        <img
-            ref={imgRef}
-            src="/map.jpg"
-            alt="Map"
-            onDoubleClick={(e) => {
-                const rect = imgRef.current.getBoundingClientRect();
-                const x = (e.clientX - rect.left) / rect.width;
-                const y = (e.clientY - rect.top) / rect.height;
-                setNewPinCoords({ x, y }); // normalized 0-1 coordinates
-            }}
-            style={{
-                display: "block",
-                width: "100%",
-                height: "auto",
-                cursor: "crosshair",
-            }}
+      <PanToPin />
+      <ImageOverlay url="/map.jpg" bounds={imageBounds} />
+      <ResetButton bounds={imageBounds} onReset={handleReset} />
+      <AddPinOnClick setNewPinCoords={setNewPinCoords} />
+
+      {/* Polygons */}
+      {polygons.map((poly, idx) => (
+        <ZoomablePolygon
+          key={idx}
+          coords={poly.coords}
+          children={poly.name}
+          visible={!activePolygon}
+          onClick={() => setActivePolygon(poly)}
         />
+      ))}
 
-        {/* Existing Pins */}
-        {pins.map((pin) => (
-            <div
-                key={pin.id}
-                title={pin.description}
-                style={{
-                position: "absolute",
-                left: `${pin.x * imgRef.current.width}px`,
-                top: `${pin.y * imgRef.current.height}px`,
-                width: "15px",
-                height: "15px",
-                borderRadius: "50%",
-                backgroundColor: getColor(pin.category),
-                transform: "translate(-50%, -50%)",
-                border: "1px solid black",
-                }}
-            />
-        ))}
-
-        {/* New Pin Popup */}
-        {newPinCoords && (
-        <div
-            style={{
-            position: "absolute",
-            left: `${newPinCoords.x * imgRef.current.width}px`,
-            top: `${newPinCoords.y * imgRef.current.height}px`,
-            transform: "translate(-50%, -50%)",
-            background: "white",
-            border: "1px solid black",
-            padding: "10px",
-            borderRadius: "5px",
-            zIndex: 100,
-            }}
+      {/* Existing pins */}
+      {pins.map((pin) => (
+        <Marker
+          key={pin.id}
+          position={[pin.x, pin.y]}
+          icon={markerIcons[getColor(pin.category)] || markerIcons.blue}
         >
-            <input
-            placeholder="Description"
-            value={newPinDesc}
-            onChange={(e) => setNewPinDesc(e.target.value)}
+          <Popup>
+            <strong>{pin.category}</strong>: {pin.description}
+          </Popup>
+        </Marker>
+      ))}
+
+      {/* New pin */}
+      {newPinCoords && (
+        <Marker position={newPinCoords}>
+          <Popup>
+            <PinForm
+              description={newPinDesc}
+              setDescription={setNewPinDesc}
+              category={newPinCategory}
+              setCategory={setNewPinCategory}
+              onSave={handleSavePin}
+              onCancel={handleCancelPin}
             />
-            <select
-            value={newPinCategory}
-            onChange={(e) => setNewPinCategory(e.target.value)}
-            >
-            <option>Lore</option>
-            <option>Quest</option>
-            <option>Raid</option>
-            <option>Dungeon</option>
-            </select>
-            <button onClick={handleSavePin}>Save</button>
-            <button onClick={handleCancelPin}>Cancel</button>
-        </div>
-        )}
-      </div>
-    </div>
+          </Popup>
+        </Marker>
+      )}
+    </MapContainer>
   );
 }
 

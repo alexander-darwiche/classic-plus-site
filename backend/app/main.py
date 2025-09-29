@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import items, survey, pins
+from app.routers import items, survey, pins, admin
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 import os
@@ -24,6 +24,7 @@ app.add_middleware(
 app.include_router(items.router)
 app.include_router(survey.router)
 app.include_router(pins.router)
+app.include_router(admin.router)
 
 
 @app.get("/")

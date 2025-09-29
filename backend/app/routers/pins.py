@@ -133,7 +133,7 @@ class VoteSchema(BaseModel):
 
 @router.post("/vote")
 def vote_pin(vote: VoteSchema, db: Session = Depends(get_db)):
-    print("Received vote:", vote)
+
     try:
         pin = vote_on_pin(db, vote.pin_id, vote.user_id, vote.vote_type)
         return {

@@ -66,15 +66,14 @@ function PinsList({ backendUrl, userId }) {
       const payload = {
         pin_id: pinId,
         user_id: "some-unique-id", // make sure you have this
-        vote_type: type,           // 'up' or 'down'
+        vote_type: "up",           // 'up' or 'down'
       };
 
-      console.log("Sending vote payload:", payload);
       // Send vote to backend
-      const res = await fetch(`${backendUrl}/pins/vote`, {
+      const res = await fetch(`${backendUrl}/pins/vote/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ payload}),
+        body: JSON.stringify(payload),
       });
       const updated = await res.json();
 

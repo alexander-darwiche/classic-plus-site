@@ -41,7 +41,7 @@ class Vote(Base):
     vote_type = Column(String)  # 'up' or 'down'
 
     pin = relationship("Pin", back_populates="votes")
-    
+
     __table_args__ = (UniqueConstraint('pin_id', 'user_id', name='_pin_user_uc'),)
 
 
@@ -133,6 +133,7 @@ class VoteSchema(BaseModel):
 
 @router.post("/vote")
 def vote_pin(vote: VoteSchema, db: Session = Depends(get_db)):
+    print("Received vote:", vote)
     try:
         pin = vote_on_pin(db, vote.pin_id, vote.user_id, vote.vote_type)
         return {

@@ -136,6 +136,7 @@ function PinsList({ backendUrl }) {
           {sortedPins.map((pin, index) => (
             <tr key={pin.id}>
               <td style={{ padding: "8px", borderBottom: "1px solid #eee" }}>{index + 1}</td>
+              <td style={{ padding: "8px", borderBottom: "1px solid #eee" }}>{pin.name}</td>
               <td style={{ padding: "8px", borderBottom: "1px solid #eee" }}>{pin.description}</td>
               <td style={{ padding: "8px", borderBottom: "1px solid #eee" }}>{pin.category}</td>
               <td style={{ padding: "8px", borderBottom: "1px solid #eee" }}>{pin.x.toFixed(1)}</td>

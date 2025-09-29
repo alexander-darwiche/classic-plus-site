@@ -1,7 +1,7 @@
 // src/components/PinForm.js
 import React from "react";
 
-function PinForm({ description, setDescription, category, setCategory, onSave, onCancel }) {
+function PinForm({ description, setDescription, name, setName, category, setCategory, onSave, onCancel }) {
   return (
     <div style={{
       display: "flex",
@@ -11,6 +11,18 @@ function PinForm({ description, setDescription, category, setCategory, onSave, o
       gap: "8px",
       padding: "10px"
     }}>
+      <input
+        type="text"
+        placeholder="Name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        style={{
+          padding: "8px",
+          fontSize: "14px",
+          borderRadius: "4px",
+          border: "1px solid #ccc"
+        }}
+      />
       <input
         type="text"
         placeholder="Description"

@@ -25,6 +25,7 @@ class Pin(Base):
     id = Column(Integer, primary_key=True, index=True)
     x = Column(Float, nullable=False)
     y = Column(Float, nullable=False)
+    name = Column(String, nullable=False)
     description = Column(String, nullable=False)
     category = Column(String, nullable=False)  # NEW FIELD
 
@@ -35,6 +36,7 @@ class PinSchema(BaseModel):
     id: int | None = None
     x: float
     y: float
+    name: str
     description: str
     category: PinCategory  # NEW FIELD
 

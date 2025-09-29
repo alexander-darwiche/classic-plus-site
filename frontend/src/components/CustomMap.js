@@ -144,6 +144,7 @@ function CustomMap({ backendUrl }) {
   const [pins, setPins] = useState([]);
   const [newPinCoords, setNewPinCoords] = useState(null);
   const [newPinDesc, setNewPinDesc] = useState("");
+  const [newPinName, setNewPinName] = useState("");
   const [newPinCategory, setNewPinCategory] = useState("Lore");
   const [activePolygon, setActivePolygon] = useState(null);
 
@@ -190,6 +191,7 @@ function CustomMap({ backendUrl }) {
       y: newPinCoords.lng,
       description: newPinDesc,
       category: newPinCategory,
+      name: newPinName,
     };
 
     try {
@@ -205,6 +207,7 @@ function CustomMap({ backendUrl }) {
     }
 
     setNewPinCoords(null);
+    setNewPinName("");
     setNewPinDesc("");
     setNewPinCategory("Lore");
   };
@@ -255,6 +258,8 @@ function CustomMap({ backendUrl }) {
         <Marker position={newPinCoords}>
           <Popup>
             <PinForm
+              name={newPinName}
+              setName={setNewPinName}
               description={newPinDesc}
               setDescription={setNewPinDesc}
               category={newPinCategory}

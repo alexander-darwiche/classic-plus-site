@@ -55,6 +55,8 @@ class PinSchema(BaseModel):
     name: str
     description: str
     category: PinCategory  # NEW FIELD
+    upvotes: int
+    downvotes: int
 
     class Config:
         orm_mode = True

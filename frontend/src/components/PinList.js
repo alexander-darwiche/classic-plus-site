@@ -48,6 +48,9 @@ function PinsList({ backendUrl }) {
     };
 
     fetchPins();
+    const interval = setInterval(fetchPins, 5000); // refresh every 5s
+
+    return () => clearInterval(interval);
   }, [backendUrl]);
 
   const getPolygonName = (pin) => {

@@ -106,22 +106,14 @@ function ResetButton({ bounds, onReset }) {
 
 // Zoomable polygon component
 function ZoomablePolygon({ coords, children, onClick, visible }) {
-  const map = useMap();
+  // const map = useMap();
   if (!visible) return null;
-
-  const handleClick = () => {
-    const bounds = L.latLngBounds(coords);
-    map.fitBounds(bounds, { padding: [50, 50] });
-    onClick();
-  };
 
   return (
     <Polygon
       positions={coords}
       pathOptions={{ color: "transparent", fillOpacity: 0 }}
       interactive={false} // makes it click-through
-
-      // eventHandlers={{ click: handleClick }}
     >
       <Popup>{children}</Popup>
     </Polygon>

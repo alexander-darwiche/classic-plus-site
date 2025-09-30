@@ -32,17 +32,17 @@ class Pin(Base):
     upvotes = Column(Integer, default=0)
     downvotes = Column(Integer, default=0)
     votes = relationship("Vote", back_populates="pin")
-
 class Vote(Base):
     __tablename__ = "votes"
     id = Column(Integer, primary_key=True, index=True)
     pin_id = Column(Integer, ForeignKey("pins.id"))
-    user_id = Column(String)  # This could be a user identifier
+    session_id = Column(String, nullable=False)
+    ip = Column(String, nullable=False)
     vote_type = Column(String)  # 'up' or 'down'
 
     pin = relationship("Pin", back_populates="votes")
 
-    __table_args__ = (UniqueConstraint('pin_id', 'user_id', name='_pin_user_uc'),)
+    __table_args__ = (UniqueConstraint('pin_id', 'session_id', 'ip', name='_pin_session_ip_uc'),)
 
 
 Base.metadata.create_all(bind=engine)
@@ -87,17 +87,21 @@ def get_pins(db: Session = Depends(get_db)):
     return db.query(Pin).all()
 
 
-def vote_on_pin(db: Session, pin_id: int, user_id: str, vote_type: str):
-    # Ensure the vote_type is valid
+def vote_on_pin(db: Session, pin_id: int, session_id: str, ip: str, vote_type: str):
     if vote_type not in ['up', 'down']:
         raise ValueError("Invalid vote type. Must be 'up' or 'down'.")
 
-    # Retrieve the pin and the user's existing vote
     pin = db.query(Pin).filter(Pin.id == pin_id).first()
-    existing_vote = db.query(Vote).filter(Vote.pin_id == pin_id, Vote.user_id == user_id).first()
+    if not pin:
+        raise ValueError("Pin not found.")
+
+    existing_vote = db.query(Vote).filter(
+        Vote.pin_id == pin_id,
+        Vote.session_id == session_id,
+        Vote.ip == ip
+    ).first()
 
     if existing_vote:
-        # Update existing vote
         if existing_vote.vote_type != vote_type:
             # Adjust vote counts
             if existing_vote.vote_type == 'up':
@@ -111,9 +115,16 @@ def vote_on_pin(db: Session, pin_id: int, user_id: str, vote_type: str):
                 pin.downvotes += 1
 
             existing_vote.vote_type = vote_type
+        # If vote_type is the same, we can optionally undo vote:
+        else:
+            if vote_type == 'up':
+                pin.upvotes -= 1
+            else:
+                pin.downvotes -= 1
+            db.delete(existing_vote)
     else:
-        # Create new vote
-        new_vote = Vote(pin_id=pin_id, user_id=user_id, vote_type=vote_type)
+        # New vote
+        new_vote = Vote(pin_id=pin_id, session_id=session_id, ip=ip, vote_type=vote_type)
         db.add(new_vote)
         if vote_type == 'up':
             pin.upvotes += 1
@@ -124,7 +135,7 @@ def vote_on_pin(db: Session, pin_id: int, user_id: str, vote_type: str):
     db.refresh(pin)
     return pin
 
-from fastapi import HTTPException
+from fastapi import Request, HTTPException
 
 class VoteSchema(BaseModel):
     pin_id: int
@@ -132,10 +143,11 @@ class VoteSchema(BaseModel):
     vote_type: str  # 'up' or 'down'
 
 @router.post("/vote")
-def vote_pin(vote: VoteSchema, db: Session = Depends(get_db)):
+def vote_pin(vote: VoteSchema, request: Request, db: Session = Depends(get_db)):
+    client_ip = request.client.host  # get IP of user
 
     try:
-        pin = vote_on_pin(db, vote.pin_id, vote.user_id, vote.vote_type)
+        pin = vote_on_pin(db, vote.pin_id, vote.session_id, client_ip, vote.vote_type)
         return {
             "pin_id": pin.id,
             "upvotes": pin.upvotes,
@@ -144,7 +156,8 @@ def vote_pin(vote: VoteSchema, db: Session = Depends(get_db)):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     
-@router.get("/votes/{user_id}")
-def get_votes(user_id: str, db: Session = Depends(get_db)):
-    votes = db.query(Vote).filter(Vote.user_id == user_id).all()
+@router.get("/votes/{session_id}")
+def get_votes(session_id: str, request: Request, db: Session = Depends(get_db)):
+    client_ip = request.client.host
+    votes = db.query(Vote).filter(Vote.session_id == session_id, Vote.ip == client_ip).all()
     return [{"pin_id": v.pin_id, "vote_type": v.vote_type} for v in votes]

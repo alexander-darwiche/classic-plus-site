@@ -43,6 +43,13 @@ function PinsList({ backendUrl, userId }) {
     fetchPins();
   }, [backendUrl, userId]);
 
+  // At the top of your component (before useEffect)
+  let sessionId = sessionStorage.getItem("session_id");
+  if (!sessionId) {
+    sessionId = crypto.randomUUID();
+    sessionStorage.setItem("session_id", sessionId);
+  }
+
   const getPolygonName = (pin) => {
     const point = turf.point([pin.y, pin.x]);
     for (const poly of polygons) {
@@ -65,16 +72,16 @@ function PinsList({ backendUrl, userId }) {
     try {
       const payload = {
         pin_id: pinId,
-        user_id: "some-unique-id", // make sure you have this
-        vote_type: "up",           // 'up' or 'down'
+        session_id: sessionId,
+        vote_type: type, // 'up' or 'down'
       };
 
-      // Send vote to backend
       const res = await fetch(`${backendUrl}/pins/vote/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
       const updated = await res.json();
 
       // Update local state
@@ -99,6 +106,7 @@ function PinsList({ backendUrl, userId }) {
       console.error("Failed to vote:", err);
     }
   };
+
 
   // --- Sorting ---
   const requestSort = (key) => {
@@ -161,7 +169,7 @@ function PinsList({ backendUrl, userId }) {
       <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
         <thead>
           <tr>
-            {["#", "name", "description", "category", "x", "y", "polygon"].map((col) => (
+            {["#", "name", "description", "category", "x", "y", "zone"].map((col) => (
               <th
                 key={col}
                 style={{ borderBottom: "1px solid #ccc", padding: "8px", cursor: "pointer" }}

@@ -139,7 +139,7 @@ from fastapi import Request, HTTPException
 
 class VoteSchema(BaseModel):
     pin_id: int
-    user_id: str  # could be email, username, or session token
+    session_id: str  # could be email, username, or session token
     vote_type: str  # 'up' or 'down'
 
 @router.post("/vote")

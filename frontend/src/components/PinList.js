@@ -3,7 +3,14 @@ import { useNavigate } from "react-router-dom";
 import * as turf from "@turf/turf";
 import polygons from "./polygons";
 
-function PinsList({ backendUrl, userId }) {
+// Generate/reuse session ID for this browser tab
+let sessionId = sessionStorage.getItem("session_id");
+if (!sessionId) {
+  sessionId = crypto.randomUUID();
+  sessionStorage.setItem("session_id", sessionId);
+}
+
+function PinsList({ backendUrl }) {
   const [pins, setPins] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: "id", direction: "ascending" });
   const [filters, setFilters] = useState({ description: "", category: "", polygon: "" });
@@ -27,8 +34,8 @@ function PinsList({ backendUrl, userId }) {
 
         setPins(enriched);
 
-        // Fetch user's votes
-        const voteRes = await fetch(`${backendUrl}/pins/votes/${userId}`);
+        // Fetch votes for this session+IP
+        const voteRes = await fetch(`${backendUrl}/pins/votes/${sessionId}`);
         const votes = await voteRes.json();
         const voteMap = {};
         votes.forEach((v) => {
@@ -41,14 +48,7 @@ function PinsList({ backendUrl, userId }) {
     };
 
     fetchPins();
-  }, [backendUrl, userId]);
-
-  // At the top of your component (before useEffect)
-  let sessionId = sessionStorage.getItem("session_id");
-  if (!sessionId) {
-    sessionId = crypto.randomUUID();
-    sessionStorage.setItem("session_id", sessionId);
-  }
+  }, [backendUrl]);
 
   const getPolygonName = (pin) => {
     const point = turf.point([pin.y, pin.x]);
@@ -73,18 +73,20 @@ function PinsList({ backendUrl, userId }) {
       const payload = {
         pin_id: pinId,
         session_id: sessionId,
-        vote_type: type, // 'up' or 'down'
+        vote_type: type,
       };
-
-      const res = await fetch(`${backendUrl}/pins/vote/`, {
+      console.log("Voting payload:", payload);
+      const res = await fetch(`${backendUrl}/pins/vote`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
+      if (!res.ok) throw new Error("Vote failed");
+
       const updated = await res.json();
 
-      // Update local state
+      // Update pin counts locally
       updatedPin = {
         ...pin,
         upvotes: updated.upvotes,
@@ -106,7 +108,6 @@ function PinsList({ backendUrl, userId }) {
       console.error("Failed to vote:", err);
     }
   };
-
 
   // --- Sorting ---
   const requestSort = (key) => {
@@ -176,7 +177,11 @@ function PinsList({ backendUrl, userId }) {
                 onClick={() => requestSort(col === "#" ? "id" : col)}
               >
                 {col.charAt(0).toUpperCase() + col.slice(1)}
-                {sortConfig.key === (col === "#" ? "id" : col) ? (sortConfig.direction === "ascending" ? " ▲" : " ▼") : null}
+                {sortConfig.key === (col === "#" ? "id" : col)
+                  ? sortConfig.direction === "ascending"
+                    ? " ▲"
+                    : " ▼"
+                  : null}
               </th>
             ))}
             <th style={{ borderBottom: "1px solid #ccc", padding: "8px" }}>Actions</th>
@@ -229,7 +234,14 @@ function PinsList({ backendUrl, userId }) {
                 </button>
                 <button
                   onClick={() => goToMap(pin)}
-                  style={{ background: "#007bff", color: "white", border: "none", padding: "5px 10px", borderRadius: "3px", cursor: "pointer" }}
+                  style={{
+                    background: "#007bff",
+                    color: "white",
+                    border: "none",
+                    padding: "5px 10px",
+                    borderRadius: "3px",
+                    cursor: "pointer",
+                  }}
                 >
                   Go to Map
                 </button>

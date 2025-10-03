@@ -186,6 +186,8 @@ function CustomMap({ backendUrl }) {
       description: newPinDesc,
       category: newPinCategory,
       name: newPinName,
+      upvotes: 0,
+      downvotes: 0,
     };
 
     try {
